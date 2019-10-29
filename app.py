@@ -1,4 +1,5 @@
 import pandas as pd
+import requests
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -19,11 +20,11 @@ import plotly.graph_objs as go
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server = app.server
-app.title='Demo'
-df=pd.read_csv(r'data_processed4.csv',
+app.config.suppress_callback_exceptions = True
+
+df=pd.read_csv(r'data_processed5.csv',
                 index_col=["datetime"], 
-                usecols=["datetime", "Platform Name","location","priority","monitoring item"],
+                usecols=["datetime", "Platform Name","location","priority","monitoring item","Month","Week"],
                 parse_dates=["datetime"])
 df.index = pd.to_datetime(df.index)
 
@@ -113,7 +114,7 @@ app.layout = html.Div([
             start_date=start_date_6,
             end_date=today_date,
             ),
-            html.Div(id='output-container-date-picker-range-slack'),
+            
 
             html.Br(),
             html.Label('Select trend'),
@@ -192,12 +193,13 @@ app.layout = html.Div([
                         id='graph4-slack',
                         clear_on_unhover=True,
                         className='six columns'
-                        ),                        
+                        ), 
+                html.Div(children=html.Div(id='graphs')),                       
                 ],className='ten columns',
                     #style={'padding': 10,}
                     ),
                 
-                html.Div(children=html.Div(id='graphs')),
+
 
                 # html.Div([
                 #         dcc.Textarea(
@@ -217,22 +219,22 @@ app.layout = html.Div([
     [dash.dependencies.Input('my-date-picker-range-slack', 'start_date'),
      dash.dependencies.Input('my-date-picker-range-slack', 'end_date')])
 
-def update_output(start_date, end_date):
+# def update_output(start_date, end_date):
 
-    string_prefix = 'You have selected: '
-    if start_date is not None:
-        start_date = dt.strptime(start_date, '%Y-%m-%d %H:%M:%S')
-        #start_date = start_date.strptime('%Y-%m-%d')
-        start_date_string = start_date.strftime('%B %d, %Y')
-        string_prefix = string_prefix + 'Start Date: ' + start_date_string + ' | '
-    if end_date is not None:
-        end_date = dt.strptime(end_date, '%Y-%m-%d %H:%M:%S.%f')
-        end_date_string = end_date.strftime('%B %d, %Y')
-        string_prefix = string_prefix + 'End Date: ' + end_date_string
-    if len(string_prefix) == len('You have selected: '):
-        return 'Select a date to see it displayed here'
-    else:
-        return string_prefix
+#     string_prefix = 'You have selected: '
+#     if start_date is not None:
+#         start_date = dt.strptime(start_date, '%Y-%m-%d %H:%M:%S')
+#         #start_date = start_date.strptime('%Y-%m-%d')
+#         start_date_string = start_date.strftime('%B %d, %Y')
+#         string_prefix = string_prefix + 'Start Date: ' + start_date_string + ' | '
+#     if end_date is not None:
+#         end_date = dt.strptime(end_date, '%Y-%m-%d %H:%M:%S.%f')
+#         end_date_string = end_date.strftime('%B %d, %Y')
+#         string_prefix = string_prefix + 'End Date: ' + end_date_string
+#     if len(string_prefix) == len('You have selected: '):
+#         return 'Select a date to see it displayed here'
+#     else:
+#         return string_prefix
 
 @app.callback(
     dash.dependencies.Output('checklist-slack', 'options'),
@@ -299,15 +301,14 @@ def update_chart1(value,start_date, end_date,
             end_month=cal[1]
             start_date=datetime.datetime(z, y, 1)
             end_date=datetime.datetime(z, y, end_month)
-            print(start_date)
-            print(end_date)
-            #current_month_start=
+
 
         df2 = df_unselect[(df_unselect.index >= start_date) & (df_unselect.index <= end_date)] 
         table_data=df2.resample('M').count()
         table_data['month_year']=table_data.index.strftime("%b-%y")
         x=table_data['month_year']
         string="Incident Monthly Trend"
+        string2="Slack Incident by Platform Name"
         chart_type='bar'
             
 
@@ -315,14 +316,12 @@ def update_chart1(value,start_date, end_date,
         df3.sort_values('Platform Name',ascending=False)
 
         if dropdown_slack_val=='dashboard':
-            # print(df2)
-            # print(table_data.iloc[0])
-            # print(table_data.iloc[1])
             df4=df2.groupby('Platform Name').count()
             df4=df4.sort_values('location',ascending=True)
         else:
             df4=df2.groupby('monitoring item').count()
-            df4=df4.sort_values('location',ascending=True).head(10)             
+            df4=df4.sort_values('location',ascending=True).head(10)
+            string2="Slack Incident by Monitoring Item"              
 
         df5=df2.groupby('priority').count()
         df5=df5.sort_values('location',ascending=True)
@@ -344,7 +343,8 @@ def update_chart1(value,start_date, end_date,
             df4=df4.sort_values('location',ascending=True)
         else:
             df4=df2.groupby('monitoring item').count()
-            df4=df4.sort_values('location',ascending=True).head(10)  
+            df4=df4.sort_values('location',ascending=True).head(10)
+            string2="Slack Incident by Monitoring Item"   
 
         df5=df2.groupby('priority').count()
         df5=df5.sort_values('location',ascending=True)
@@ -365,7 +365,8 @@ def update_chart1(value,start_date, end_date,
             df4=df4.sort_values('location',ascending=True)
         else:
             df4=df2.groupby('monitoring item').count()
-            df4=df4.sort_values('location',ascending=True).head(10) 
+            df4=df4.sort_values('location',ascending=True).head(10)
+            string2="Slack Incident by Monitoring Item"  
 
         df5=df2.groupby('priority').count()
         df5=df5.sort_values('location',ascending=True)
@@ -388,7 +389,7 @@ def update_chart1(value,start_date, end_date,
     
     figure2={
             'data' : [{'type' : 'pie',
-                'name' : "Students by level of study",
+                'name' : "% of incident by location",
                 'labels' : df3.index,
                 'values' : df3['Platform Name'],
                 'direction' : 'clockwise',
@@ -409,7 +410,7 @@ def update_chart1(value,start_date, end_date,
                 marker=dict(color=color_list1)
             )],
             'layout': {
-                'title': string,
+                'title': string2,
                 'clickmode': 'event+select'
                 #'showlegend':True
                 }
@@ -417,14 +418,14 @@ def update_chart1(value,start_date, end_date,
 
     figure4={
             'data' : [{'type' : 'pie',
-                'name' : "Students by level of study",
+                'name' : "% of incident by priority",
                 'labels' : df5.index,
                 'values' : df5['location'],
                 'direction' : 'clockwise',
                 'hoverinfo': 'none',
                 'hole':0.3}],
             'layout': {
-                'title': string,
+                'title': "% of incident by priority",
                 'clickmode': 'event+select'
                 #'showlegend':True
                 }
@@ -438,50 +439,97 @@ def update_chart1(value,start_date, end_date,
             )
 
 def update_compare(checklist_val):
-
+  
     if checklist_val is None or not checklist_val:
         graphs=""
-        print(checklist_val)
-
-    # if not checklist_val:
-    #     print(checklist_val)
         
- #       print(checklist_val[0])
     elif checklist_val[0]=='compare':
         print('yes')
         graphs= html.Div([
                 html.Div([
+                    dcc.Dropdown(id='checklist-range',
+                    options=[
+                            {'label': 'Monthly', 'value': 'month'},
+                            {'label': 'Weekly', 'value': 'week'},
+                            ],
+                    value='month',
+                    className='two columns'
+                            ),
+                    dcc.Dropdown(id='select1',
+                    className='two columns'
+                            ),
+                    dcc.Dropdown(id='select2',
+                    className='two columns'
+                            )                     
+                        ],className='row',style={'padding': 50}),
+                html.Div([
                            
                 dcc.Graph(
                 id='test',
-                className='six columns',
-                figure={
-                'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-                ],
-                'layout': {
-                'title': 'Dash Data Visualization'
-                }
-                }
-                ),
-                dcc.Graph(
-                id='tes2',
-                className='six columns',
-                figure={
-                'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
-                ],
-                'layout': {
-                'title': 'Dash Data Visualization'
-                }
-                }
-                ),
-                ])
-        ],className='ten columns')
+                )],className='twelve columns')
+        ],className='twelve columns',style={'background-color':'gold','padding': 10})
 
     return graphs
+
+@app.callback(
+    [dash.dependencies.Output('select1', 'options'),
+    dash.dependencies.Output('select2', 'options'),
+    dash.dependencies.Output('select1', 'value'),
+    dash.dependencies.Output('select2', 'value'),],
+    [dash.dependencies.Input('checklist-range', 'value')])
+
+def update_option1(value):
+    if value=='month':
+        sel_month=df['Month'].unique()
+        options=[{'label': i, 'value': i} for i in sel_month]
+        value1=sel_month[1]
+        value2=sel_month[0] 
+
+
+    elif value=='week':
+        sel_week=df['Week'].unique()
+        options=[{'label': i, 'value': i} for i in sel_week]
+        value1=sel_week[1]
+        value2=sel_week[0]    
+
+    return options,options,value1,value2
+
+@app.callback(
+    dash.dependencies.Output('test', 'figure'),
+    [dash.dependencies.Input('select1', 'value'),
+    dash.dependencies.Input('select2', 'value'),
+    dash.dependencies.Input('checklist-range', 'value')])
+
+def update_test(select1_val,select2_val,range_val):
+    if select1_val is None or select2_val is None or range_val is None:
+        raise PreventUpdate
+    print(select1_val,select2_val,range_val)
+    if select1_val is not None and select2_val is not None and range_val is not None:
+        if range_val=="week":
+            sel_1=df[df['Week']==select1_val].groupby('Platform Name').count()
+            sel_2=df[df['Week']==select2_val].groupby('Platform Name').count()
+            x=sel_1.index
+            y1=sel_1['Week']
+            y2=sel_2['Week']
+
+        if range_val=="month":
+            sel_1=df[df['Month']==select1_val].groupby('Platform Name').count()
+            sel_2=df[df['Month']==select2_val].groupby('Platform Name').count()
+            x=sel_1.index
+            y1=sel_1['Month']
+            y2=sel_2['Month']
+
+        figure={
+            'data': [
+                {'x': x, 'y': y1, 'type': 'bar', 'name': select1_val},
+                {'x': x, 'y': y2, 'type': 'bar', 'name': select2_val},
+                ],
+            'layout': {
+                'title': 'Count {} and {}'.format(select1_val,select2_val)
+                }
+                }
+
+        return figure
         
 if __name__ == '__main__':
     app.run_server()
