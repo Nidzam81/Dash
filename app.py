@@ -317,10 +317,11 @@ def update_chart1(value,start_date, end_date,
         if dropdown_slack_val=='dashboard':
             df4=df2.groupby('Platform Name').count()
             df4=df4.sort_values('location',ascending=True)
+            str="Platform Name"
         else:
             df4=df2.groupby('monitoring item').count()
             df4=df4.sort_values('location',ascending=True).head(10)
-            string2="Slack Incident by Monitoring Item"              
+            str="Monitoring Item"
 
         df5=df2.groupby('priority').count()
         df5=df5.sort_values('location',ascending=True)
@@ -340,10 +341,11 @@ def update_chart1(value,start_date, end_date,
         if dropdown_slack_val=='dashboard':
             df4=df2.groupby('Platform Name').count()
             df4=df4.sort_values('location',ascending=True)
+            str="Platform Name"
         else:
             df4=df2.groupby('monitoring item').count()
             df4=df4.sort_values('location',ascending=True).head(10)
-            string2="Slack Incident by Monitoring Item"   
+            str="Monitoring Item"
 
         df5=df2.groupby('priority').count()
         df5=df5.sort_values('location',ascending=True)
@@ -362,10 +364,12 @@ def update_chart1(value,start_date, end_date,
         if dropdown_slack_val=='dashboard':
             df4=df2.groupby('Platform Name').count()
             df4=df4.sort_values('location',ascending=True)
+            str="Platform Name"
         else:
             df4=df2.groupby('monitoring item').count()
             df4=df4.sort_values('location',ascending=True).head(10)
-            string2="Slack Incident by Monitoring Item"  
+            str="Monitoring Item"
+     
 
         df5=df2.groupby('priority').count()
         df5=df5.sort_values('location',ascending=True)
@@ -409,7 +413,7 @@ def update_chart1(value,start_date, end_date,
                 marker=dict(color=color_list1)
             )],
             'layout': {
-                'title': string2,
+                'title': "Incident count by {}".format(str),
                 'clickmode': 'event+select'
                 #'showlegend':True
                 }
@@ -532,3 +536,4 @@ def update_test(select1_val,select2_val,range_val):
         
 if __name__ == '__main__':
     app.run_server()
+
