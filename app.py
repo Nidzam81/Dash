@@ -19,6 +19,7 @@ import plotly.graph_objs as go
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 app.config.suppress_callback_exceptions = True
 
 df=pd.read_csv(r'data_processed5.csv',
