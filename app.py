@@ -158,7 +158,7 @@ app.layout = html.Div([
                                 ),
                  
                              html.Br(),
-                html.Label('Filter location (exclude from data)'),                 
+                html.Label('Advance function'),                 
                 dcc.Checklist(id='checklist-compare',
                                 options=[
                                 {'label': 'Comparison', 'value': 'compare'},
